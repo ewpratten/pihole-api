@@ -1,15 +1,27 @@
+[![PyPI version](https://badge.fury.io/py/PiHole-api.svg)](https://badge.fury.io/py/PiHole-api)
 # PiHole-api
 A python3 wrapper for the pihole api that aims to eventually be a full replacement for the [AdminLTE](https://github.com/pi-hole/AdminLTE) web panel
+
+## Installing
+To install the package from pip, first run:
+```bash
+python3 -m pip install --no-cache-dir PiHole-api
+```
+
+Due to naming issues, inside python, the package is named `pihole` **not** `PiHole-api`. Keeping this in mind, let's import it.
+```python3
+import pihole as ph
+```
 
 ## Usage
 This library has many features that can be broken down in to two simple sections. Stats, and Controls. In order to use any of the functions, you must first import the library, then create a PiHole object.
 
 ```python3
 # Import the library
-import PiHole-api as PH
+import pihole as ph
 
 # Create an object
-pihole = PH.PiHole("<ip address of server>")
+pihole = ph.PiHole("<ip address of server>")
 ```
 Throuought this README, I will assume that you are using the name `pihole` for your object
 
@@ -100,7 +112,7 @@ This returns a list of lists containing data about all queries. Fore more info, 
 
 
 
-### Controls
+### <div id="Controls"> Controls </div>
 First, you must log in. Use the password you set or where given by the installer (the same one you use on the web control panel)
 ```python3
 pihole.authenticate(password)
