@@ -2,6 +2,9 @@ import requests
 import time
 import hashlib
 
+def inApiLink(ip, endpoint):
+	return "http://"+ str(ip) +"/admin/scripts/pi-hole/php/"+ str(endpoint) +".php"
+
 class Auth(object):
 	def __init__(self, password):
 		# PiHole's web token is just a double sha256 hash of the utf8 encoded password
@@ -14,6 +17,7 @@ class PiHole(object):
 		self.ip_address = ip_address
 		self.auth_data = None
 		self.refresh()
+		self.pw = None
 		
 	
 	def refresh(self):
@@ -58,6 +62,8 @@ class PiHole(object):
 	
 	def authenticate(self, password):
 		self.auth_data = Auth(password)
+		self.pw = password
+		# print(self.auth_data.token)
 	
 	def getAllQueries(self):
 		if self.auth_data == None:
@@ -76,3 +82,31 @@ class PiHole(object):
 			print("Unable to disable pihole. Please authenticate")
 			exit(1)
 		requests.get("http://" + self.ip_address + "/admin/api.php?disable="+ str(seconds) +"&auth=" + self.auth_data.token)
+	
+	def getVersion(self):
+		return requests.get("http://" + self.ip_address + "/admin/api.php?versions").json()
+	
+	def getDBfilesize(self):
+		if self.auth_data == None:
+			print("Please authenticate")
+			exit(1)
+		return float(requests.get("http://" + self.ip_address + "/admin/api_db.php?getDBfilesize&auth=" + self.auth_data.token).json()["filesize"])
+	
+	def getList(self, list):
+		return requests.get(inApiLink(self.ip_address, "get") + "?list="+str(list)).json()
+	
+	def add(self, list, domain):
+		if self.auth_data == None:
+			print("Please authenticate")
+			exit(1)
+		with requests.session() as s:
+			s.get("http://"+ str(self.ip_address) +"/admin/scripts/pi-hole/php/add.php")
+			requests.post("http://"+ str(self.ip_address) +"/admin/scripts/pi-hole/php/add.php", data={"list":list, "domain":domain, "pw":self.pw}).text
+			
+	def sub(self, list, domain):
+		if self.auth_data == None:
+			print("Please authenticate")
+			exit(1)
+		with requests.session() as s:
+			s.get("http://"+ str(self.ip_address) +"/admin/scripts/pi-hole/php/sub.php")
+			requests.post("http://"+ str(self.ip_address) +"/admin/scripts/pi-hole/php/sub.php", data={"list":list, "domain":domain, "pw":self.pw}).text

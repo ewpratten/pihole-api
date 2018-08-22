@@ -26,6 +26,15 @@ pihole = ph.PiHole("<ip address of server>")
 Throuought this README, I will assume that you are using the name `pihole` for your object
 
 ### Stats
+Checking the current version data can be done using:
+```python3
+pihole.getVersion()
+```
+It will return a json object that will look like:
+```json
+{'core_update': False, 'web_update': False, 'FTL_update': False, 'core_current': 'v4.0', 'web_current': 'v4.0', 'FTL_current': 'v4.0', 'core_latest': 'v4.0', 'web_latest': 'v4.0', 'FTL_latest': 'v4.0', 'core_branch': 'master', 'web_branch': 'master', 'FTL_branch': ''}
+```
+
 To refresh all stat-related data:
 ```python3
 pihole.refresh()
@@ -110,6 +119,17 @@ pihole.getAllQueries()
 
 This returns a list of lists containing data about all queries. Fore more info, see the getAllQueries section of: https://discourse.pi-hole.net/t/pi-hole-api/1863
 
+To get the filesize of the database file, use:
+```python3
+pihole.getDBfilesize()
+```
+
+To get the contents of your white/black list, use:
+```python3
+pihole.getList("black")
+```
+"black" can be replaced with "white" to get your whitelist
+
 
 
 ### <div id="Controls"> Controls </div>
@@ -128,3 +148,10 @@ To disable pihole, authenticate, then use:
 pihole.disable(10)
 ```
 replace `10` with the number of **seconds** that you want to disable pihole for.
+
+Add a domain to one of your lists:
+```python3
+pihole.add("black", "google.com")
+```
+The example blacklists google.com. Replacing black with one of: **white**, **black**, **wild**, **regex**, or **audit** will change the list to be added to. To remove a domain form a list, replace `add()` with `sub()`
+

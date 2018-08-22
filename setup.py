@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='PiHole-api',
-    version='1.1.1',
+    version='2.0',
     description='A python3 wrapper for the pihole api that aims to eventually be a full replacement for the AdminLTE web panel',
     url='https://github.com/Ewpratten/PiHole-api',
     author='Evan Pratten',
