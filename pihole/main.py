@@ -32,10 +32,10 @@ class Auth(object):
 class PiHole(object):
     # Takes in an ip address of a pihole server
     def __init__(self, ip_address):
-    self.ip_address = ip_address
-    self.auth_data = None
-    self.refresh()
-    self.pw = None
+        self.ip_address = ip_address
+        self.auth_data = None
+        self.refresh()
+        self.pw = None
 
     def refresh(self):
         rawdata = requests.get("http://" + self.ip_address + "/admin/api.php?summary").json()
