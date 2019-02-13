@@ -37,15 +37,16 @@ class PiHole(object):
     self.refresh()
     self.pw = None
     self.protocol = "http://"
+    self.port = 80
 
     def refresh(self):
         rawdata = requests.get(self.protocol + self.host + "/admin/api.php?summary").json()
 
         if self.auth_data:
-            topdevicedata = requests.get(self.protocol + self.host + "/admin/api.php?getQuerySources=25&auth=" + self.auth_data.token).json()
+            topdevicedata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getQuerySources=25&auth=" + self.auth_data.token).json()
             self.top_devices = topdevicedata["top_sources"]
-            self.forward_destinations = requests.get(self.protocol + self.host + "/admin/api.php?getForwardDestinations&auth=" + self.auth_data.token).json()
-            self.query_types = requests.get(self.protocol + self.host + "/admin/api.php?getQueryTypes&auth=" + self.auth_data.token).json()["querytypes"]
+            self.forward_destinations = requests.get(self.protocol + self.host + ":"+self.port + /admin/api.php?getForwardDestinations&auth=" + self.auth_data.token).json()
+            self.query_types = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getQueryTypes&auth=" + self.auth_data.token).json()["querytypes"]
 
         # Data that is returned is now parsed into vars
         self.status = rawdata["status"]
@@ -63,13 +64,13 @@ class PiHole(object):
 
     @requires_auth
     def refreshTop(self, count):
-        rawdata = requests.get(self.protocol + self.host + "/admin/api.php?topItems="+ str(count) +"&auth=" + self.auth_data.token).json()
+        rawdata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?topItems="+ str(count) +"&auth=" + self.auth_data.token).json()
         self.top_queries = rawdata["top_queries"]
         self.top_ads = rawdata["top_ads"]
 
 
     def getGraphData(self):
-        rawdata = requests.get(self.protocol + self.host + "/admin/api.php?overTimeData10mins").json()
+        rawdata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?overTimeData10mins").json()
         return {"domains":rawdata["domains_over_time"], "ads":rawdata["ads_over_time"]}
 
     def authenticate(self, password):
@@ -82,22 +83,22 @@ class PiHole(object):
         if self.auth_data == None:
             print("Unable to get queries. Please authenticate")
             exit(1)
-        return requests.get(self.protocol + self.host + "/admin/api.php?getAllQueries&auth=" + self.auth_data.token).json()["data"]
+        return requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getAllQueries&auth=" + self.auth_data.token).json()["data"]
 
     @requires_auth
     def enable(self):
-        requests.get(self.protocol + self.host + "/admin/api.php?enable&auth=" + self.auth_data.token)
+        requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?enable&auth=" + self.auth_data.token)
 
     @requires_auth
     def disable(self, seconds):
-        requests.get(self.protocol + self.host + "/admin/api.php?disable="+ str(seconds) +"&auth=" + self.auth_data.token)
+        requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?disable="+ str(seconds) +"&auth=" + self.auth_data.token)
 
     def getVersion(self):
-        return requests.get(self.protocol + self.host + "/admin/api.php?versions").json()
+        return requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?versions").json()
 
     @requires_auth
     def getDBfilesize(self):
-        return float(requests.get(self.protocol + self.host + "/admin/api_db.php?getDBfilesize&auth=" + self.auth_data.token).json()["filesize"])
+        return float(requests.get(self.protocol + self.host + ":"+self.port + "/admin/api_db.php?getDBfilesize&auth=" + self.auth_data.token).json()["filesize"])
 
     def getList(self, list):
         return requests.get(inApiLink(self.host, "get") + "?list="+str(list)).json()
@@ -105,11 +106,11 @@ class PiHole(object):
     @requires_auth
     def add(self, list, domain):
         with requests.session() as s:
-            s.get(self.protocol+ str(self.host) +"/admin/scripts/pi-hole/php/add.php")
-            requests.post(self.protocol+ str(self.host) +"/admin/scripts/pi-hole/php/add.php", data={"list":list, "domain":domain, "pw":self.pw}).text
+            s.get(self.protocol+ str(self.host) + ":"+self.port + "/admin/scripts/pi-hole/php/add.php")
+            requests.post(self.protocol+ str(self.host) + ":"+self.port + "/admin/scripts/pi-hole/php/add.php", data={"list":list, "domain":domain, "pw":self.pw}).text
 
     @requires_auth
     def sub(self, list, domain):
         with requests.session() as s:
-            s.get(self.protocol+ str(self.host) +"/admin/scripts/pi-hole/php/sub.php")
-            requests.post(self.protocol+ str(self.host) +"/admin/scripts/pi-hole/php/sub.php", data={"list":list, "domain":domain, "pw":self.pw}).text
+            s.get(self.protocol+ str(self.host) +":"+self.port+"/admin/scripts/pi-hole/php/sub.php")
+            requests.post(self.protocol+ str(self.host) +":"+self.port+"/admin/scripts/pi-hole/php/sub.php", data={"list":list, "domain":domain, "pw":self.pw}).text
