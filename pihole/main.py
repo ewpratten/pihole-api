@@ -32,10 +32,10 @@ class Auth(object):
 class PiHole(object):
     # Takes in an ip address of a pihole server
     def __init__(self, ip_address):
-    self.ip_address = ip_address
-    self.auth_data = None
-    self.refresh()
-    self.pw = None
+        self.ip_address = ip_address
+        self.auth_data = None
+        self.refresh()
+        self.pw = None
 
     def refresh(self):
         rawdata = requests.get("http://" + self.ip_address + "/admin/api.php?summary").json()
@@ -77,11 +77,24 @@ class PiHole(object):
         # print(self.auth_data.token)
 
     @requires_auth
-    def getAllQueries(self):
+    def getAllQueries(self, client=None, domain=None):
         if self.auth_data == None:
             print("Unable to get queries. Please authenticate")
             exit(1)
-        return requests.get("http://" + self.ip_address + "/admin/api.php?getAllQueries&auth=" + self.auth_data.token).json()["data"]
+
+        url = "http://" + self.ip_address + "/admin/api.php?getAllQueries&auth=" + self.auth_data.token
+
+        if client and domain:
+            print("Cannot search for both client AND domain")
+            exit(1)
+
+        if client:
+            url += "&client=" + client
+
+        if domain:
+            url += "&domain=" + domain
+
+        return requests.get(url).json()["data"]
 
     @requires_auth
     def enable(self):
