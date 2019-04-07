@@ -32,12 +32,12 @@ class Auth(object):
 class PiHole(object):
     # Takes in an ip address of a pihole server
     def __init__(self, host):
-    self.host = host
-    self.auth_data = None
-    self.refresh()
-    self.pw = None
-    self.protocol = "http://"
-    self.port = 80
+        self.host = host
+        self.auth_data = None
+        self.refresh()
+        self.pw = None
+        self.protocol = "http://"
+        self.port = 80
 
     def refresh(self):
         rawdata = requests.get(self.protocol + self.host + "/admin/api.php?summary").json()
@@ -45,7 +45,7 @@ class PiHole(object):
         if self.auth_data:
             topdevicedata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getQuerySources=25&auth=" + self.auth_data.token).json()
             self.top_devices = topdevicedata["top_sources"]
-            self.forward_destinations = requests.get(self.protocol + self.host + ":"+self.port + /admin/api.php?getForwardDestinations&auth=" + self.auth_data.token).json()
+            self.forward_destinations = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getForwardDestinations&auth=" + self.auth_data.token).json()
             self.query_types = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getQueryTypes&auth=" + self.auth_data.token).json()["querytypes"]
 
         # Data that is returned is now parsed into vars
