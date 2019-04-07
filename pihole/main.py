@@ -34,10 +34,12 @@ class PiHole(object):
     def __init__(self, host):
         self.host = host
         self.auth_data = None
-        self.refresh()
         self.pw = None
         self.protocol = "http://"
-        self.port = 80
+        self.port = "80"
+        if self.protocol == "https://":
+            self.port = "443"
+        self.refresh()
 
     def refresh(self):
         rawdata = requests.get(self.protocol + self.host + "/admin/api.php?summary").json()
