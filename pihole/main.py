@@ -18,10 +18,6 @@ def requires_auth(api_func):
     return wrapper
 
 
-def inApiLink(ip, endpoint):
-    return "http://"+ str(ip) +"/admin/scripts/pi-hole/php/"+ str(endpoint) +".php"
-
-
 class Auth(object):
     def __init__(self, password):
         # PiHole's web token is just a double sha256 hash of the utf8 encoded password
@@ -40,6 +36,9 @@ class PiHole(object):
         if self.protocol == "https://":
             self.port = "443"
         self.refresh()
+
+    def inApiLink(self,ip, endpoint):
+        return self.protocol+ str(ip) + ":"+self.port+"/admin/scripts/pi-hole/php/"+ str(endpoint) +".php"
 
     def refresh(self):
         rawdata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?summary").json()
@@ -103,7 +102,7 @@ class PiHole(object):
         return float(requests.get(self.protocol + self.host + ":"+self.port + "/admin/api_db.php?getDBfilesize&auth=" + self.auth_data.token).json()["filesize"])
 
     def getList(self, list):
-        return requests.get(inApiLink(self.host, "get") + "?list="+str(list)).json()
+        return requests.get(self.inApiLink(self.host, "get") + "?list="+str(list)).json()
 
     @requires_auth
     def add(self, list, domain):
