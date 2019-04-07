@@ -31,18 +31,18 @@ class Auth(object):
 
 class PiHole(object):
     # Takes in an ip address of a pihole server
-    def __init__(self, host):
+    def __init__(self, host, port = "80"):
         self.host = host
         self.auth_data = None
         self.pw = None
         self.protocol = "http://"
-        self.port = "80"
+        self.port = port
         if self.protocol == "https://":
             self.port = "443"
         self.refresh()
 
     def refresh(self):
-        rawdata = requests.get(self.protocol + self.host + "/admin/api.php?summary").json()
+        rawdata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?summary").json()
 
         if self.auth_data:
             topdevicedata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getQuerySources=25&auth=" + self.auth_data.token).json()
