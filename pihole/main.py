@@ -27,14 +27,14 @@ class Auth(object):
 
 class PiHole(object):
     # Takes in an ip address of a pihole server
-    def __init__(self, host, port = "80"):
+    def __init__(self, host, port = 80):
         self.host = host
         self.auth_data = None
         self.pw = None
         self.protocol = "http://"
-        self.port = port
-        if self.protocol == "https://":
-            self.port = "443"
+        self.port = str(port)
+        if self.port == "443":
+            self.protocol = "https://"
         self.refresh()
 
     def inApiLink(self,ip, endpoint):
@@ -42,6 +42,7 @@ class PiHole(object):
 
     def refresh(self):
         rawdata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?summary").json()
+        # Debugging Purposes print(self.protocol + self.host + ":"+self.port + "/admin/api.php?summary")
 
         if self.auth_data:
             topdevicedata = requests.get(self.protocol + self.host + ":"+self.port + "/admin/api.php?getQuerySources=25&auth=" + self.auth_data.token).json()
