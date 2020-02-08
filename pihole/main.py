@@ -11,7 +11,7 @@ class QueryActionType(Enum):
     GRAVITY = 1
     FORWARDED = 2
     CACHE = 3
-    BLOCKED_WILDECARD = 4
+    BLOCKED_WILDCARD = 4
     UNKNOWN = 5
 
 
