@@ -1,9 +1,25 @@
 import requests
 import time
 import hashlib
+import datetime as dt
+from dateutil.relativedelta import relativedelta
+import dateutil.parser as date_parser
+from enum import Enum
+
+
+class QueryActionType(Enum):
+    GRAVITY = 1
+    FORWARDED = 2
+    CACHE = 3
+    BLOCKED_WILDCARD = 4
+    UNKNOWN = 5
 
 
 class AuthRequired(Exception):
+    pass
+
+
+class QueryException(Exception):
     pass
 
 
@@ -30,6 +46,27 @@ class Auth(object):
 
 
 class PiHole(object):
+
+    known_time_ranges = {
+        "today": (dt.datetime.combine(dt.datetime.utcnow().date(), dt.datetime.min.time()), dt.datetime.utcnow()),
+        "yesterday": (dt.datetime.combine(dt.datetime.utcnow().date()-dt.timedelta(days=1), dt.datetime.min.time()),
+                      dt.datetime.combine(dt.datetime.utcnow().date()-dt.timedelta(days=1), dt.datetime.max.time())),
+        "last_7_days": (dt.datetime.combine(dt.datetime.utcnow().date()-dt.timedelta(days=6), dt.datetime.min.time()),
+                        dt.datetime.utcnow()),
+        "last_30_days": (dt.datetime.combine(dt.datetime.utcnow().date()-dt.timedelta(days=29), dt.datetime.min.time()),
+                         dt.datetime.utcnow()),
+        "this_month": (dt.datetime.combine(dt.date(dt.datetime.utcnow().date().year,dt.datetime.utcnow().date().month,1),
+                                           dt.datetime.min.time()),
+                       dt.datetime.utcnow()),
+        "last_month": [dt.datetime.combine(dt.date(dt.datetime.utcnow().date().year,dt.datetime.utcnow().date().month,1)-relativedelta(months=1),
+                                           dt.datetime.min.time()),
+                       dt.datetime.combine(dt.date(dt.datetime.utcnow().date().year,dt.datetime.utcnow().date().month,1)-dt.timedelta(days=1),
+                                           dt.datetime.max.time())],
+        "this_year": (dt.datetime.combine(dt.date(dt.datetime.utcnow().date().year,1,1), dt.datetime.min.time()),
+                      dt.datetime.utcnow()),
+        "all_time": (0, dt.datetime.utcnow())
+    }
+
     # Takes in an ip address of a pihole server
     def __init__(self, ip_address):
         self.ip_address = ip_address
@@ -66,7 +103,6 @@ class PiHole(object):
         self.top_queries = rawdata["top_queries"]
         self.top_ads = rawdata["top_ads"]
 
-
     def getGraphData(self):
         rawdata = requests.get("http://" + self.ip_address + "/admin/api.php?overTimeData10mins").json()
         return {"domains":rawdata["domains_over_time"], "ads":rawdata["ads_over_time"]}
@@ -77,16 +113,51 @@ class PiHole(object):
         # print(self.auth_data.token)
 
     @requires_auth
-    def getAllQueries(self, client=None, domain=None):
+    def getAllQueries(self, client=None, domain=None, date_from=None, date_to=None, return_type='raw'):
+        """
+        This function allows querying the pihole DB. It can take client, domain or dates.
+        dates can come in one of the following formats:
+            ISO formatted string
+            an instance of datetime
+            one of the shorthand strings listed above under 'known_time_ranges'
+
+        The return type can be either returned as is (default) or formatted (return_type=array_dict) in order to make
+        using the data easier
+        """
         if self.auth_data == None:
             print("Unable to get queries. Please authenticate")
             exit(1)
 
-        url = "http://" + self.ip_address + "/admin/api.php?getAllQueries&auth=" + self.auth_data.token
+        url = "http://" + self.ip_address + "/admin/api_db.php?getAllQueries&auth=" + self.auth_data.token
 
         if client and domain:
             print("Cannot search for both client AND domain")
             exit(1)
+
+        start = None
+        until = None
+        if isinstance(date_from, str):
+            try:
+                start = date_parser.isoparse(date_from)
+            except Exception:
+                if date_from in self.known_time_ranges and date_to is None:
+                    start, until = self.known_time_ranges[date_from]
+        elif isinstance(date_from, dt.datetime):
+            start = date_from
+
+        if isinstance(date_to, str):
+            try:
+                until = date_parser.isoparse(date_to)
+            except Exception:
+                pass
+        elif isinstance(date_from, dt.datetime):
+            until = date_to
+
+        if start is not None:
+            url +="&from=" + str(start.timestamp())
+
+        if until is not None:
+            url +="&until=" + str(until.timestamp())
 
         if client:
             url += "&client=" + client
@@ -94,7 +165,22 @@ class PiHole(object):
         if domain:
             url += "&domain=" + domain
 
-        return requests.get(url).json()["data"]
+        result = requests.get(url).json()
+        if 'data' not in result:
+            raise QueryException("Empty results returned: something is wrong with your query")
+
+        if return_type == 'array_dict':
+            data = [{
+                'datetime': dt.datetime.fromtimestamp(item[0]),
+                'type': item[1],
+                'requested_domain': item[2],
+                'client': item[3],
+                'status': QueryActionType(item[4])
+            } for item in result['data']]
+        else:
+            data = result['data']
+
+        return data
 
     @requires_auth
     def enable(self):
