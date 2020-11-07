@@ -198,13 +198,14 @@ class PiHole(object):
         return float(requests.get("http://" + self.ip_address + "/admin/api_db.php?getDBfilesize&auth=" + self.auth_data.token).json()["filesize"])
 
     def getList(self, list):
-        return requests.get(inApiLink(self.ip_address, "get") + "?list="+str(list)).json()
+        return requests.get(
+            "http://" + str(self.ip_address) + "/admin/api.php?list=" + list).json()
 
     @requires_auth
     def add(self, list, domain):
-        with requests.session() as s:
-            s.get("http://"+ str(self.ip_address) +"/admin/scripts/pi-hole/php/add.php")
-            requests.post("http://"+ str(self.ip_address) +"/admin/scripts/pi-hole/php/add.php", data={"list":list, "domain":domain, "pw":self.pw}).text
+        requests.get(
+            "http://" + str(self.ip_address) + "/admin/api.php?list=" + list + "&add=" + domain + "&auth=" +
+            self.auth_data.token)
 
     @requires_auth
     def sub(self, list, domain):
