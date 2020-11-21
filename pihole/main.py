@@ -197,9 +197,10 @@ class PiHole(object):
     def getDBfilesize(self):
         return float(requests.get("http://" + self.ip_address + "/admin/api_db.php?getDBfilesize&auth=" + self.auth_data.token).json()["filesize"])
 
+    @requires_auth
     def getList(self, list):
         return requests.get(
-            "http://" + str(self.ip_address) + "/admin/api.php?list=" + list).json()
+            "http://" + str(self.ip_address) + "/admin/api.php?list=" + list + "&auth=" + self.auth_data.token).json()
 
     @requires_auth
     def add(self, list, domain):
