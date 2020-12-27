@@ -203,10 +203,12 @@ class PiHole(object):
             "http://" + str(self.ip_address) + "/admin/api.php?list=" + list + "&auth=" + self.auth_data.token).json()
 
     @requires_auth
-    def add(self, list, domain):
-        requests.get(
-            "http://" + str(self.ip_address) + "/admin/api.php?list=" + list + "&add=" + domain + "&auth=" +
-            self.auth_data.token)
+    def add(self, list, domain, comment=""):
+        url = "/admin/api.php?list=" + list + "&add=" + domain + "&auth=" + self.auth_data.token
+        comment = {'comment': comment}
+        response = requests.post(
+            "http://" + str(self.ip_address) + url, data=comment)
+        return response.text
 
     @requires_auth
     def sub(self, list, domain):
